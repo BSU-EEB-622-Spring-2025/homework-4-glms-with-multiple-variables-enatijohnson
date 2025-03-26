@@ -35,7 +35,7 @@ mae(pois_mod, data = mistletoe)
 mae(nb_mod, data = mistletoe)
 #MAE is 158.3636 for both models
 
-
+## ASW: nice! MAE may not shift between nb and poisson, but if we are violating the assumptions of the poisson, we want to switch regardless because our p-values can be overly confident in the poisson fit.
 
 ## 1b) (15 pts)** Use visual (e.g. a marginal effects plot) and written (e.g. effect sizes on scale of response) approaches to interpret the results of your model.
 
@@ -44,6 +44,8 @@ mae(nb_mod, data = mistletoe)
 plot_predictions(nb_mod, condition = "Treatment") + theme_bw()
 #There is more than a 23-fold increase in seedling abundance beneath parasitized trees. The estimates and p-values informed my conclusions. I needed to use the exp() function on the estimates to convert them back from logistic scale.
 
+## ASW: great!
+
 
 ## 1c) (10 pts)** During the course of this study, 2012 was an atypically rainy year, compared to 2011. Fit an additional glm that quantifies how the effect of mistletoe differs between the two years in this study. Write ~2 new sentences that summarize the results of the new model and their biological implications.
 
@@ -51,6 +53,8 @@ nb_mod <- glm.nb(Seedlings~Treatment * Year, data = mistletoe)
 summary(nb_mod)
 plot_predictions(nb_mod, by =c("Treatment", "Year")) + theme_bw()
 #The addition of Year resulted in all of the estimates being not statistically significant, although with p-values only slightly higher than 0.05. Seedling density was higher in 2012, with most of the difference coming from a higher density of seedlings under parasitized trees.
+
+## ASW: great work! 30/30
 
 ## Question 2:
 treemortality <- read.csv("treemortality.csv")
@@ -71,10 +75,15 @@ test_roc
 
 #Forest thinning does appear to reduce the probability of tree mortality based on the model. There is a 58% reduction in tree mortality in the thinned area, and the effect of thinning is highly significant. The AUC of 0.7096 indicates that almost half of the variance in the data is explained by the model. 
 
+##ASW: The AUC/ROC isn't telling us about the proportion explained (like an R2), but rather the model's ability to classify "0s" and "1s" correctly.  AUC of 1.0 indicates perfect discrimination, while 0.5 indicates that the model isn't classifying values any better than a random guess would.
+ 
+
 
 ## 2b)(2 pts)** The researchers explicitly considered the potential for confounding relationships related to tree size in their design and randomized their post-fire sampling by tree size. Given this information, do the researchers need to incorporate tree size into their glm to accurately estimate the effect of thinning? Why or why not?
 
 #No, they do not need to incorporate tree size into the GLM. Because tree size was randomized between treatments, the effect of thinning is not biased by tree size. 
+
+## ASW: lovely!
 
 
 ## 2c) Refit the model from 2a to include the necessary variables to minimize bias in our estimation of the “thinning” variable, based on the reviewer’s proposed DAG (above). Does the effect of “thinning” change? If so, describe the degree of change and why the two models may differ in their conclusions. If needed, modify your model interpretation from 2a.
@@ -84,3 +93,20 @@ plogis(-15.37)
 plogis(-15.37-0.948)
 plogis(-15.37 + 0.627)
 #"Closing the loop" by including one of the other variables reveals that thinning had basically no effect. The effect of slope and distance to nearest road was being hidden within the thinning variable in the previous model.
+
+
+## ASW: you're close here! two quick things. Firstly, this model should also include road distance as a covariate, according to the DAG, since that 'backdoor' path is not closed.
+
+## Secondly, Once the model looks like: glm(mortality~ slope + distroad + thinning…), your predictions need to include a 'baseline' for those other variables. For instance, a common practice is to hold all the other values at their means:
+
+# plogis(int + Bthinning*X +	Broad*(mean(treemortality$roaddist)) +  Bslope*(mean(treemortality$slope)))
+
+## (which is what the predictions() function does automatically.)
+
+## Currently, your predictions are holding slope at 0 and distance from road at 0, making the probabilities very, very small. But you are on the right track! The effect of thinning should be reduced, but not disappear entirely.
+
+plot_predictions(mod2, condition="thinning")
+
+## 17/20
+
+## ASW: nice work! 47/50
